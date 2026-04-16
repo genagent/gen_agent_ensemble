@@ -35,4 +35,24 @@ defmodule GenAgentEnsemble do
   defdelegate notify(name, event), to: GenAgentEnsemble.Server
   defdelegate status(name), to: GenAgentEnsemble.Server
   defdelegate stop(name), to: GenAgentEnsemble.Server
+
+  @doc """
+  List the names of all running ensembles, sorted.
+
+      iex> GenAgentEnsemble.list()
+      ["qa-pool", "solo"]
+  """
+  @spec list() :: [String.t()]
+  def list do
+    GenAgentEnsemble.Registry
+    |> Registry.select([{{:"$1", :_, :_}, [], [:"$1"]}])
+    |> Enum.sort()
+  end
+
+  @doc """
+  Enter a line-oriented conversational REPL over a running ensemble.
+
+  See `GenAgentEnsemble.Chat` for details and slash commands.
+  """
+  defdelegate chat(name), to: GenAgentEnsemble.Chat, as: :start
 end
