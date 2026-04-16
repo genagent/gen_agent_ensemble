@@ -180,8 +180,17 @@ defmodule GenAgentEnsemble.Chat do
   end
 
   defp handle_command("/status", state) do
-    status = GenAgentEnsemble.status(state.name)
-    IO.puts(IO.ANSI.format([:faint, format_status(status), :reset]))
+    case GenAgentEnsemble.status(state.name) do
+      {:ok, status} ->
+        IO.puts(IO.ANSI.format([:faint, format_status(status), :reset]))
+
+      {:error, reason} ->
+        IO.puts(IO.ANSI.format([:red, "status error: ", :reset, inspect(reason)]))
+
+      other ->
+        IO.puts(IO.ANSI.format([:faint, inspect(other, pretty: true), :reset]))
+    end
+
     loop(state)
   end
 
