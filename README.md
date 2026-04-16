@@ -45,13 +45,54 @@ def deps do
 end
 ```
 
-## Quickstart (config-driven)
+## Quickstart (zero-setup demo)
 
-Edit `config/config.exs` in your app:
+The `GenAgentEnsemble.Backends.Echo` backend requires no API keys
+and no external services -- every prompt is echoed back. It's built
+so you can see `chat/1` work end-to-end on a fresh clone in under a
+minute.
+
+Edit `config/config.exs`:
 
 ```elixir
 import Config
 
+config :gen_agent_ensemble,
+  ensembles: [
+    [
+      name: "echo",
+      strategy: GenAgentEnsemble.Strategies.Solo,
+      opts: [
+        agent:
+          {"w", GenAgentEnsemble.Agents.Simple,
+           backend: GenAgentEnsemble.Backends.Echo,
+           delay_ms: 300}
+      ]
+    ]
+  ]
+```
+
+Start iex and drop into the chat REPL:
+
+```sh
+iex -S mix
+```
+
+```elixir
+iex> GenAgentEnsemble.chat("echo")
+echo> hello there
+⋯ thinking
+echo: echo: hello there
+  0ms
+echo> /exit
+bye
+```
+
+Once that feels right, swap the backend for something real.
+
+## Real backend example
+
+```elixir
 config :gen_agent_ensemble,
   ensembles: [
     [
@@ -68,13 +109,7 @@ config :gen_agent_ensemble,
   ]
 ```
 
-Start iex:
-
-```sh
-iex -S mix
-```
-
-Your ensemble is live as `"solo"`:
+Programmatic use:
 
 ```elixir
 iex> {:ok, resp} = GenAgentEnsemble.ask("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?")

@@ -17,6 +17,21 @@ import Config
 
 # config :gen_agent_ensemble,
 #   ensembles: [
+#     # Zero-setup demo. Every prompt is echoed back with an
+#     # "echo: " prefix via GenAgentEnsemble.Backends.Echo. No API
+#     # keys, no subprocess. Useful for trying chat/1 or prototyping
+#     # pipelines before wiring a real backend.
+#     [
+#       name: "echo",
+#       strategy: GenAgentEnsemble.Strategies.Solo,
+#       opts: [
+#         agent:
+#           {"w", GenAgentEnsemble.Agents.Simple,
+#            backend: GenAgentEnsemble.Backends.Echo,
+#            delay_ms: 300}
+#       ]
+#     ],
+#
 #     # Single-agent passthrough. The simplest useful ensemble --
 #     # one named process, one backend session behind it.
 #     [
