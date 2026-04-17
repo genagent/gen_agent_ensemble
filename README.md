@@ -125,8 +125,9 @@ iex> E.status("qa-pool")
 iex> E.drain("qa-pool")   # [{token, text}, ...]
 ```
 
-See the strategy-specific workflow guides for the canonical
-command sequences for Solo, Pool, Pipeline, and Supervisor.
+See the [strategy workflow guides](guides/workflows/overview.md)
+for the canonical command sequences for Solo, Pool, Pipeline, and
+Supervisor, including per-strategy gotchas and variations.
 
 ## Public API
 

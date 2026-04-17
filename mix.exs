@@ -84,7 +84,17 @@ defmodule GenAgentEnsemble.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"],
+      extras: [
+        "README.md",
+        "guides/workflows/overview.md",
+        "guides/workflows/solo.md",
+        "guides/workflows/pool.md",
+        "guides/workflows/pipeline.md",
+        "guides/workflows/supervisor.md"
+      ],
+      groups_for_extras: [
+        "Strategy workflows": ~r"guides/workflows/.*"
+      ],
       source_ref: "v#{@version}"
     ]
   end
