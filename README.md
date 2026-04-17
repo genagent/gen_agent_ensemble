@@ -116,7 +116,7 @@ iex> E.ask!("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?") |> IO.puts
 # Nothing is wrong with it -- valid idiomatic Elixir...
 ```
 
-Async mode with a Pool (also declared in config):
+Async fan-out with a Pool (declare it in config too):
 
 ```elixir
 iex> {:ok, t1} = E.tell("qa-pool", "question one")
@@ -124,6 +124,9 @@ iex> {:ok, t2} = E.tell("qa-pool", "question two")
 iex> E.status("qa-pool")
 iex> E.drain("qa-pool")   # [{token, text}, ...]
 ```
+
+See the [Pool workflow guide](guides/workflows/pool.md) for the
+config shape and the fan-out-vs-serial gotcha.
 
 See the [strategy workflow guides](guides/workflows/overview.md)
 for the canonical command sequences for Solo, Pool, Pipeline, and
@@ -174,10 +177,12 @@ iex> E.start_link(
 ...>   strategy: GenAgentEnsemble.Strategies.Solo,
 ...>   opts: [
 ...>     agent: {"w", GenAgentEnsemble.Agents.Simple,
-...>             backend: GenAgent.Backends.Mock,
-...>             scripts: [{"hello", ["hi!"]}]}
+...>             backend: GenAgentEnsemble.Backends.Echo,
+...>             transform: &String.upcase/1}
 ...>   ]
 ...> )
+iex> E.ask!("scratch", "hello")
+"HELLO"
 ```
 
 This is the natural way to prototype: try a config inline, iterate,
