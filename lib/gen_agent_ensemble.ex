@@ -48,11 +48,4 @@ defmodule GenAgentEnsemble do
     |> Registry.select([{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.sort()
   end
-
-  @doc """
-  Enter a line-oriented conversational REPL over a running ensemble.
-
-  See `GenAgentEnsemble.Chat` for details and slash commands.
-  """
-  defdelegate chat(name), to: GenAgentEnsemble.Chat, as: :start
 end

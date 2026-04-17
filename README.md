@@ -48,9 +48,9 @@ end
 ## Quickstart (zero-setup demo)
 
 The `GenAgentEnsemble.Backends.Echo` backend requires no API keys
-and no external services -- every prompt is echoed back. It's built
-so you can see `chat/1` work end-to-end on a fresh clone in under a
-minute.
+and no external services -- every prompt is echoed back with an
+"echo: " prefix. Useful for sanity-checking the wiring on a fresh
+clone.
 
 Edit `config/config.exs`:
 
@@ -72,20 +72,19 @@ config :gen_agent_ensemble,
   ]
 ```
 
-Start iex and drop into the chat REPL:
+Start iex. The repo ships a `.iex.exs` that aliases
+`GenAgentEnsemble` to `E`:
 
 ```sh
 iex -S mix
 ```
 
 ```elixir
-iex> GenAgentEnsemble.chat("echo")
-echo> hello there
-⋯ thinking
-echo: echo: hello there
-  0ms
-echo> /exit
-bye
+iex> E.list()
+["echo"]
+iex> {:ok, resp} = E.ask("echo", "hello there")
+iex> resp.text
+"echo: hello there"
 ```
 
 Once that feels right, swap the backend for something real.
@@ -112,35 +111,37 @@ config :gen_agent_ensemble,
 Programmatic use:
 
 ```elixir
-iex> {:ok, resp} = GenAgentEnsemble.ask("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?")
+iex> {:ok, resp} = E.ask("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?")
 iex> IO.puts(resp.text)
 ```
 
 Async mode with a Pool (also declared in config):
 
 ```elixir
-iex> {:ok, t1} = GenAgentEnsemble.tell("qa-pool", "question one")
-iex> {:ok, t2} = GenAgentEnsemble.tell("qa-pool", "question two")
-iex> GenAgentEnsemble.status("qa-pool")
-iex> {:ok, done} = GenAgentEnsemble.inbox("qa-pool")   # drains completed
+iex> {:ok, t1} = E.tell("qa-pool", "question one")
+iex> {:ok, t2} = E.tell("qa-pool", "question two")
+iex> E.status("qa-pool")
+iex> {:ok, done} = E.inbox("qa-pool")   # drains completed
 ```
 
 ## Public API
 
 All functions are addressed by session name (the `:name` you put
-in config).
+in config). Shown here with the `E` alias set up by the repo's
+`.iex.exs`.
 
-| Function                                | Purpose                                            |
-|-----------------------------------------|----------------------------------------------------|
-| `GenAgentEnsemble.ask(name, prompt)`    | Synchronous single-turn. Blocks until reply.       |
-| `GenAgentEnsemble.tell(name, prompt)`   | Async. Returns a `token` you poll or drain later.  |
-| `GenAgentEnsemble.poll(name, token)`    | Non-blocking check on a single token.              |
-| `GenAgentEnsemble.inbox(name)`          | Drain all completed tokens since last call.        |
-| `GenAgentEnsemble.notify(name, event)`  | Send an event to the strategy (cast).              |
-| `GenAgentEnsemble.status(name)`         | Inspect strategy phase, queue depth, etc.          |
-| `GenAgentEnsemble.stop(name)`           | Stop an ensemble cleanly.                          |
-| `GenAgentEnsemble.start_link(opts)`     | Start an ad-hoc ensemble imperatively (same shape  |
-|                                         | as a config entry).                                |
+| Function                   | Purpose                                            |
+|----------------------------|----------------------------------------------------|
+| `E.ask(name, prompt)`      | Synchronous single-turn. Blocks until reply.       |
+| `E.tell(name, prompt)`     | Async. Returns a `token` you poll or drain later.  |
+| `E.poll(name, token)`      | Non-blocking check on a single token.              |
+| `E.inbox(name)`            | Drain all completed tokens since last call.        |
+| `E.notify(name, event)`    | Send an event to the strategy (cast).              |
+| `E.status(name)`           | Inspect strategy phase, queue depth, etc.          |
+| `E.stop(name)`             | Stop an ensemble cleanly.                          |
+| `E.list()`                 | Names of all running ensembles.                    |
+| `E.start_link(opts)`       | Start an ad-hoc ensemble imperatively (same shape  |
+|                            | as a config entry).                                |
 
 ## Ad-hoc ensembles from iex
 
@@ -148,7 +149,7 @@ You don't have to use config. Any ensemble can be started
 imperatively with the same opts shape:
 
 ```elixir
-iex> GenAgentEnsemble.start_link(
+iex> E.start_link(
 ...>   name: "scratch",
 ...>   strategy: GenAgentEnsemble.Strategies.Solo,
 ...>   opts: [

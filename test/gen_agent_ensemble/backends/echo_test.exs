@@ -64,7 +64,7 @@ defmodule GenAgentEnsemble.Backends.EchoTest do
       %{name: name}
     end
 
-    test "works with Solo + Simple + chat", %{name: name} do
+    test "works with Solo + Simple via ask/2", %{name: name} do
       {:ok, _} =
         GenAgentEnsemble.start_link(
           name: name,
@@ -74,13 +74,8 @@ defmodule GenAgentEnsemble.Backends.EchoTest do
           ]
         )
 
-      output =
-        ExUnit.CaptureIO.capture_io("hello there\n/exit\n", fn ->
-          GenAgentEnsemble.Chat.start(name)
-        end)
-
-      assert output =~ "echo: hello there"
-      assert output =~ "bye"
+      assert {:ok, %{text: "echo: hello there"}} =
+               GenAgentEnsemble.ask(name, "hello there", 5_000)
     end
 
     defp safe_stop(name) do
