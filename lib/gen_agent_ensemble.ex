@@ -20,7 +20,7 @@ defmodule GenAgentEnsemble do
       # ...later...
       {:ok, :completed, response} = GenAgentEnsemble.poll("research-1", token)
 
-      {:ok, response} = GenAgentEnsemble.ask("research-1", "quick question", 30_000)
+      {:ok, response} = GenAgentEnsemble.ask("research-1", "quick question", timeout: 30_000)
 
   See `GenAgentEnsemble.Strategy` for how to implement your own strategy.
   """
@@ -29,7 +29,7 @@ defmodule GenAgentEnsemble do
   defdelegate tell(name, prompt), to: GenAgentEnsemble.Server
   defdelegate tell(name, prompt, opts), to: GenAgentEnsemble.Server
   defdelegate ask(name, prompt), to: GenAgentEnsemble.Server
-  defdelegate ask(name, prompt, timeout), to: GenAgentEnsemble.Server
+  defdelegate ask(name, prompt, opts), to: GenAgentEnsemble.Server
   defdelegate poll(name, token), to: GenAgentEnsemble.Server
   defdelegate inbox(name), to: GenAgentEnsemble.Server
   defdelegate notify(name, event), to: GenAgentEnsemble.Server

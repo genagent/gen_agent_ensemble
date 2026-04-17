@@ -24,7 +24,7 @@ defmodule GenAgentEnsemble.Agents.Simple do
           ]
         )
 
-      {:ok, r} = GenAgentEnsemble.ask("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?")
+      {:ok, r} = GenAgentEnsemble.ask("solo", "What's wrong with Enum.map(list, &(&1 + 1))?")
       IO.puts(r.text)
   """
 

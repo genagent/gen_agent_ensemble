@@ -42,7 +42,7 @@ defmodule GenAgentEnsemble.IEx do
   defdelegate tell(name, prompt), to: GenAgentEnsemble
   defdelegate tell(name, prompt, opts), to: GenAgentEnsemble
   defdelegate ask(name, prompt), to: GenAgentEnsemble
-  defdelegate ask(name, prompt, timeout), to: GenAgentEnsemble
+  defdelegate ask(name, prompt, opts), to: GenAgentEnsemble
   defdelegate poll(name, token), to: GenAgentEnsemble
   defdelegate inbox(name), to: GenAgentEnsemble
   defdelegate notify(name, event), to: GenAgentEnsemble
@@ -55,11 +55,12 @@ defmodule GenAgentEnsemble.IEx do
   Blocking `ask` that returns the response text directly, or raises.
 
   The iex equivalent of "just give me the answer." Raises on error
-  so mistakes don't silently become empty strings.
+  so mistakes don't silently become empty strings. Accepts the same
+  `opts` as `ask/3` (e.g. `timeout: 60_000`, `agent: "alice"`).
   """
-  @spec ask!(String.t(), String.t(), timeout()) :: String.t()
-  def ask!(name, prompt, timeout \\ 30_000) do
-    case GenAgentEnsemble.ask(name, prompt, timeout) do
+  @spec ask!(String.t(), String.t(), keyword()) :: String.t()
+  def ask!(name, prompt, opts \\ []) do
+    case GenAgentEnsemble.ask(name, prompt, opts) do
       {:ok, %Response{text: text}} ->
         text
 

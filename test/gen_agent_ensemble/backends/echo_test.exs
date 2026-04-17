@@ -75,7 +75,7 @@ defmodule GenAgentEnsemble.Backends.EchoTest do
         )
 
       assert {:ok, %{text: "echo: hello there"}} =
-               GenAgentEnsemble.ask(name, "hello there", 5_000)
+               GenAgentEnsemble.ask(name, "hello there", timeout: 5_000)
     end
 
     defp safe_stop(name) do

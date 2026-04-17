@@ -49,7 +49,7 @@ defmodule GenAgentEnsemble.Strategies.SoloTest do
         fn prompt -> [Event.new(:result, %{text: "you said: #{prompt}"})] end
       ])
 
-    {:ok, response} = GenAgentEnsemble.ask(name, "hello there", 5_000)
+    {:ok, response} = GenAgentEnsemble.ask(name, "hello there", timeout: 5_000)
     assert response.text == "you said: hello there"
   end
 
@@ -86,7 +86,7 @@ defmodule GenAgentEnsemble.Strategies.SoloTest do
   test "ask returns {:error, reason} when the turn fails",
        %{name: name, agent_name: agent_name} do
     {:ok, _} = start_session(name, agent_name, [{:error, :nope}])
-    assert {:error, :nope} = GenAgentEnsemble.ask(name, "fail me", 5_000)
+    assert {:error, :nope} = GenAgentEnsemble.ask(name, "fail me", timeout: 5_000)
   end
 
   test "halt op terminates the session and fails pending tokens",

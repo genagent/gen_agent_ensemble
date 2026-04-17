@@ -48,7 +48,7 @@ defmodule GenAgentEnsemble.Strategies.PipelineTest do
         [transform("inner")]
       ])
 
-    {:ok, resp} = GenAgentEnsemble.ask(name, "seed", 5_000)
+    {:ok, resp} = GenAgentEnsemble.ask(name, "seed", timeout: 5_000)
     assert resp.text == "inner(mid(outer(seed)))"
   end
 
@@ -73,7 +73,7 @@ defmodule GenAgentEnsemble.Strategies.PipelineTest do
         [{:error, :midstage_boom}]
       ])
 
-    assert {:error, {stage, :midstage_boom}} = GenAgentEnsemble.ask(name, "in", 5_000)
+    assert {:error, {stage, :midstage_boom}} = GenAgentEnsemble.ask(name, "in", timeout: 5_000)
     assert stage == "#{name}-s2"
 
     # Pipeline should be idle again.

@@ -27,10 +27,12 @@ defmodule GenAgentEnsemble.Server do
     GenServer.start_link(__MODULE__, opts, name: via(name))
   end
 
-  def tell(name, prompt, _opts \\ []), do: GenServer.call(via(name), {:tell, prompt, []})
+  def tell(name, prompt, opts \\ []), do: GenServer.call(via(name), {:tell, prompt, opts})
 
-  def ask(name, prompt, timeout \\ 30_000),
-    do: GenServer.call(via(name), {:ask, prompt, []}, timeout)
+  def ask(name, prompt, opts \\ []) do
+    {timeout, strategy_opts} = Keyword.pop(opts, :timeout, 30_000)
+    GenServer.call(via(name), {:ask, prompt, strategy_opts}, timeout)
+  end
 
   def poll(name, token), do: GenServer.call(via(name), {:poll, token})
   def inbox(name), do: GenServer.call(via(name), :inbox)

@@ -51,7 +51,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
         [worker_script, worker_script, worker_script]
       )
 
-    {:ok, resp} = GenAgentEnsemble.ask(name, "big question", 5_000)
+    {:ok, resp} = GenAgentEnsemble.ask(name, "big question", timeout: 5_000)
 
     # Worker names sort as w-1, w-2, w-3; each got one prompt in order.
     assert resp.text ==
@@ -67,7 +67,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
     {:ok, info} = GenAgentEnsemble.status(name)
     assert info.phase == :idle
 
-    {:ok, _resp} = GenAgentEnsemble.ask(name, "q", 5_000)
+    {:ok, _resp} = GenAgentEnsemble.ask(name, "q", timeout: 5_000)
 
     {:ok, info} = GenAgentEnsemble.status(name)
     assert info.phase == :idle
@@ -79,7 +79,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
 
     {:ok, _} = start_session(name, [coord_script], [worker_script, worker_script])
 
-    {:ok, _} = GenAgentEnsemble.ask(name, "q", 5_000)
+    {:ok, _} = GenAgentEnsemble.ask(name, "q", timeout: 5_000)
 
     # Let {:stop, ...} ops drain.
     Process.sleep(50)
@@ -94,7 +94,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
     coord_script = [Event.new(:result, %{text: ""})]
     {:ok, _} = start_session(name, [coord_script], [])
 
-    {:ok, resp} = GenAgentEnsemble.ask(name, "q", 5_000)
+    {:ok, resp} = GenAgentEnsemble.ask(name, "q", timeout: 5_000)
     assert resp.text == ""
   end
 
@@ -127,7 +127,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
 
     {:ok, _} = start_session(name, [coord_script], worker_scripts)
 
-    assert {:error, {_, :worker_boom}} = GenAgentEnsemble.ask(name, "q", 5_000)
+    assert {:error, {_, :worker_boom}} = GenAgentEnsemble.ask(name, "q", timeout: 5_000)
 
     # Both workers should be torn down; coordinator remains.
     Process.sleep(50)

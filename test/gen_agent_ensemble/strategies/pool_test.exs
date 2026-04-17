@@ -79,8 +79,8 @@ defmodule GenAgentEnsemble.Strategies.PoolTest do
     scripts = [{:error, :boom}, fn p -> [Event.new(:result, %{text: "ok:#{p}"})] end]
     {:ok, _} = start_pool(name, 1, scripts)
 
-    assert {:error, :boom} = GenAgentEnsemble.ask(name, "bad", 5_000)
-    assert {:ok, %{text: "ok:good"}} = GenAgentEnsemble.ask(name, "good", 5_000)
+    assert {:error, :boom} = GenAgentEnsemble.ask(name, "bad", timeout: 5_000)
+    assert {:ok, %{text: "ok:good"}} = GenAgentEnsemble.ask(name, "good", timeout: 5_000)
   end
 
   test "worker death shrinks pool; zero workers halts session", %{name: name} do
