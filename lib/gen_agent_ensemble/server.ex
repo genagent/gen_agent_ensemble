@@ -161,19 +161,19 @@ defmodule GenAgentEnsemble.Server do
   end
 
   @impl true
-  def handle_info({:gen_agent_stop, agent, ref}, state) do
+  def handle_info({:gen_agent_stop, ns_agent, ref}, state) do
     case Map.pop(state.in_flight, ref) do
       {nil, _} ->
         {:noreply, state}
 
-      {^agent, rest} ->
+      {bare_agent, rest} ->
         state = %{state | in_flight: rest}
 
-        case GenAgent.poll(agent, ref, 5_000) do
+        case GenAgent.poll(ns_agent, ref, 5_000) do
           {:ok, :completed, response} ->
             {ops, strategy_state} =
               call_strategy(state.strategy_mod, :handle_response, [
-                agent,
+                bare_agent,
                 response,
                 state.strategy_state
               ])
@@ -184,29 +184,22 @@ defmodule GenAgentEnsemble.Server do
           _ ->
             {:noreply, state}
         end
-
-      {other_agent, rest} ->
-        Logger.warning(
-          "[gen_agent_ensemble] in_flight ref mismatch: expected #{agent}, got #{other_agent}"
-        )
-
-        {:noreply, %{state | in_flight: rest}}
     end
   end
 
-  def handle_info({:gen_agent_error, agent, ref, reason}, state) do
+  def handle_info({:gen_agent_error, _ns_agent, ref, reason}, state) do
     case Map.pop(state.in_flight, ref) do
       {nil, _} ->
         {:noreply, state}
 
-      {^agent, rest} ->
+      {bare_agent, rest} ->
         state = %{state | in_flight: rest}
 
         state =
           if function_exported?(state.strategy_mod, :handle_error, 3) do
             {ops, strategy_state} =
               call_strategy(state.strategy_mod, :handle_error, [
-                agent,
+                bare_agent,
                 reason,
                 state.strategy_state
               ])
@@ -214,16 +207,13 @@ defmodule GenAgentEnsemble.Server do
             %{state | strategy_state: strategy_state} |> apply_ops(ops)
           else
             Logger.warning(
-              "[gen_agent_ensemble] agent #{agent} turn errored (unhandled): #{inspect(reason)}"
+              "[gen_agent_ensemble] agent #{bare_agent} turn errored (unhandled): #{inspect(reason)}"
             )
 
             state
           end
 
         {:noreply, state}
-
-      {_, rest} ->
-        {:noreply, %{state | in_flight: rest}}
     end
   end
 
@@ -275,7 +265,7 @@ defmodule GenAgentEnsemble.Server do
     detach_telemetry(state.session_name)
 
     Enum.each(state.agents, fn name ->
-      _ = catch_exit(fn -> GenAgent.stop(name) end)
+      _ = catch_exit(fn -> GenAgent.stop(namespaced(state, name)) end)
     end)
 
     :ok
@@ -297,7 +287,7 @@ defmodule GenAgentEnsemble.Server do
   end
 
   defp apply_op({:start, {name, module, opts}}, state) do
-    agent_opts = Keyword.put(opts, :name, name)
+    agent_opts = Keyword.put(opts, :name, namespaced(state, name))
 
     case GenAgent.start_agent(module, agent_opts) do
       {:ok, pid} ->
@@ -310,15 +300,10 @@ defmodule GenAgentEnsemble.Server do
              monitors: Map.put(state.monitors, mref, name)
          }}
 
-      {:error, {:already_started, pid}} ->
-        mref = Process.monitor(pid)
-
-        {:ok,
-         %{
-           state
-           | agents: MapSet.put(state.agents, name),
-             monitors: Map.put(state.monitors, mref, name)
-         }}
+      {:error, {:already_started, _pid}} ->
+        # Namespacing by session name means the only way to hit this is a
+        # duplicate sub-agent spec inside a single ensemble. Fail loud.
+        {:error, {:duplicate_sub_agent, name}}
 
       {:error, reason} ->
         {:error, reason}
@@ -326,13 +311,13 @@ defmodule GenAgentEnsemble.Server do
   end
 
   defp apply_op({:stop, name}, state) do
-    _ = catch_exit(fn -> GenAgent.stop(name) end)
+    _ = catch_exit(fn -> GenAgent.stop(namespaced(state, name)) end)
     monitors = drop_monitors_for(state.monitors, name)
     {:ok, %{state | agents: MapSet.delete(state.agents, name), monitors: monitors}}
   end
 
   defp apply_op({:dispatch, name, prompt}, state) do
-    case GenAgent.tell(name, prompt) do
+    case GenAgent.tell(namespaced(state, name), prompt) do
       {:ok, ref} ->
         {:ok, %{state | in_flight: Map.put(state.in_flight, ref, name)}}
 
@@ -350,7 +335,7 @@ defmodule GenAgentEnsemble.Server do
   end
 
   defp apply_op({:forward, name, event}, state) do
-    _ = catch_exit(fn -> GenAgent.notify(name, event) end)
+    _ = catch_exit(fn -> GenAgent.notify(namespaced(state, name), event) end)
     {:ok, state}
   end
 
@@ -385,6 +370,14 @@ defmodule GenAgentEnsemble.Server do
   defp call_strategy(mod, fun, args) do
     {:ok, ops, strategy_state} = apply(mod, fun, args)
     {ops, strategy_state}
+  end
+
+  # Internal name used when registering a sub-agent with GenAgent.Registry.
+  # Strategy code always sees the bare name; the Server translates when
+  # calling GenAgent.{tell,stop,notify,poll} and ignores the namespaced
+  # name that comes back on telemetry events (it looks up by ref instead).
+  defp namespaced(%__MODULE__{session_name: session}, bare_name) do
+    "#{session}/#{bare_name}"
   end
 
   defp pop_completed(state, token) do

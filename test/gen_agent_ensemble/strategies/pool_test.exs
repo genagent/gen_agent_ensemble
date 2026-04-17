@@ -88,8 +88,9 @@ defmodule GenAgentEnsemble.Strategies.PoolTest do
     {:ok, pid} = start_pool(name, 1, [echo])
     ref = Process.monitor(pid)
 
-    # Kill the only worker.
-    GenAgent.stop("#{name}-w-1")
+    # Kill the only worker. The Server namespaces sub-agent names internally
+    # as "<session>/<bare>", so we reach it by the registered name.
+    GenAgent.stop("#{name}/#{name}-w-1")
 
     assert_receive {:DOWN, ^ref, :process, _, _}, 2_000
   end

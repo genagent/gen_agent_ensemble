@@ -144,7 +144,7 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
     ref = Process.monitor(pid)
 
     # Kill the coordinator; handle_agent_down should halt the session.
-    GenAgent.stop("#{name}-coord")
+    GenAgent.stop("#{name}/#{name}-coord")
 
     assert_receive {:DOWN, ^ref, :process, _, _}, 2_000
   end
