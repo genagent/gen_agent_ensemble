@@ -19,11 +19,12 @@ This library is both:
 | Strategy      | Topology                                 | Module                                      |
 |---------------|------------------------------------------|---------------------------------------------|
 | Solo          | One agent, passthrough                   | `GenAgentEnsemble.Strategies.Solo`          |
-| Supervisor    | Coordinator + dynamic worker fan-out     | `GenAgentEnsemble.Strategies.Supervisor`    |
+| Switchboard   | Named fleet, caller-routed               | `GenAgentEnsemble.Strategies.Switchboard`   |
 | Pool          | N reusable workers, FIFO queue           | `GenAgentEnsemble.Strategies.Pool`          |
 | Pipeline      | Linear stage chain                       | `GenAgentEnsemble.Strategies.Pipeline`      |
+| Supervisor    | Coordinator + dynamic worker fan-out     | `GenAgentEnsemble.Strategies.Supervisor`    |
 
-Planned: Switchboard, Debate, Consensus.
+Planned: Debate, Consensus.
 
 See the [gen_agent pattern guides](https://hexdocs.pm/gen_agent)
 for the shape of each strategy and how to reason about their

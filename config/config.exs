@@ -61,6 +61,24 @@ import Config
 #       ]
 #     ],
 #
+#     # Named fleet, caller-routed. Every tell/ask must specify
+#     # `opts[:agent]`; the addressed agent answers. Use it for
+#     # "specialist team" shapes.
+#     [
+#       name: "reviewers",
+#       strategy: GenAgentEnsemble.Strategies.Switchboard,
+#       opts: [
+#         agents: [
+#           {"alice", GenAgentEnsemble.Agents.Simple,
+#             backend: GenAgent.Backends.Anthropic,
+#             system: "You review API design."},
+#           {"bob", GenAgentEnsemble.Agents.Simple,
+#             backend: GenAgent.Backends.Anthropic,
+#             system: "You review performance."}
+#         ]
+#       ]
+#     ],
+#
 #     # Linear N-stage chain. Each stage's response text becomes the
 #     # next stage's prompt. Last stage's response is the reply.
 #     [

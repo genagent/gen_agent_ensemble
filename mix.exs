@@ -88,6 +88,7 @@ defmodule GenAgentEnsemble.MixProject do
         "README.md",
         "guides/workflows/overview.md",
         "guides/workflows/solo.md",
+        "guides/workflows/switchboard.md",
         "guides/workflows/pool.md",
         "guides/workflows/pipeline.md",
         "guides/workflows/supervisor.md"

@@ -12,12 +12,13 @@ the same operations are available, minus the REPL-flavoured helpers
 
 ## Which strategy?
 
-| Shape of work                                              | Strategy      | Typical call        |
-|------------------------------------------------------------|---------------|---------------------|
-| "Answer this one thing, maintaining a running conversation." | Solo          | `E.ask!/2`          |
-| "Answer N independent things, in parallel."                 | Pool          | `tell` + `drain`    |
-| "Run this input through a chain of transformations."        | Pipeline      | `E.ask!/2`          |
-| "Decompose a big question, fan out, recombine."             | Supervisor    | `E.ask!/2`          |
+| Shape of work                                                   | Strategy    | Typical call                  |
+|-----------------------------------------------------------------|-------------|-------------------------------|
+| "Answer this one thing, maintaining a running conversation."    | Solo        | `E.ask!/2`                    |
+| "Ask Alice or Bob specifically -- named fleet."                 | Switchboard | `E.ask!/3` with `agent:`      |
+| "Answer N independent things, in parallel."                     | Pool        | `tell` + `drain`              |
+| "Run this input through a chain of transformations."            | Pipeline    | `E.ask!/2`                    |
+| "Decompose a big question, fan out, recombine."                 | Supervisor  | `E.ask!/2`                    |
 
 Rough guide, not a rulebook -- a Solo can handle multi-turn
 conversation just fine, a Pool can be used for a single prompt if
@@ -62,6 +63,7 @@ iex> E.list()
 ## Per-strategy guides
 
 - [Solo](solo.md) -- single agent, passthrough
+- [Switchboard](switchboard.md) -- named fleet, caller routes by `agent:` opt
 - [Pool](pool.md) -- fixed-size worker pool, FIFO queue
 - [Pipeline](pipeline.md) -- linear N-stage chain
 - [Supervisor](supervisor.md) -- coordinator decomposes, workers fan out
