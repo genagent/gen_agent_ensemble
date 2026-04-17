@@ -73,7 +73,9 @@ config :gen_agent_ensemble,
 ```
 
 Start iex. The repo ships a `.iex.exs` that aliases
-`GenAgentEnsemble` to `E`:
+`GenAgentEnsemble.IEx` to `E` -- a module that delegates the core
+API (`list/0`, `ask/2`, `tell/2`, ...) and adds REPL-flavoured
+helpers on top:
 
 ```sh
 iex -S mix
@@ -82,8 +84,7 @@ iex -S mix
 ```elixir
 iex> E.list()
 ["echo"]
-iex> {:ok, resp} = E.ask("echo", "hello there")
-iex> resp.text
+iex> E.ask!("echo", "hello there")
 "echo: hello there"
 ```
 
@@ -111,8 +112,8 @@ config :gen_agent_ensemble,
 Programmatic use:
 
 ```elixir
-iex> {:ok, resp} = E.ask("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?")
-iex> IO.puts(resp.text)
+iex> E.ask!("solo", "What's wrong with `Enum.map(list, &(&1 + 1))`?") |> IO.puts()
+# Nothing is wrong with it -- valid idiomatic Elixir...
 ```
 
 Async mode with a Pool (also declared in config):
@@ -121,14 +122,19 @@ Async mode with a Pool (also declared in config):
 iex> {:ok, t1} = E.tell("qa-pool", "question one")
 iex> {:ok, t2} = E.tell("qa-pool", "question two")
 iex> E.status("qa-pool")
-iex> {:ok, done} = E.inbox("qa-pool")   # drains completed
+iex> E.drain("qa-pool")   # [{token, text}, ...]
 ```
+
+See the strategy-specific workflow guides for the canonical
+command sequences for Solo, Pool, Pipeline, and Supervisor.
 
 ## Public API
 
 All functions are addressed by session name (the `:name` you put
-in config). Shown here with the `E` alias set up by the repo's
-`.iex.exs`.
+in config). Shown here with the `E` alias (`GenAgentEnsemble.IEx`)
+set up by the repo's `.iex.exs`.
+
+### Core
 
 | Function                   | Purpose                                            |
 |----------------------------|----------------------------------------------------|
@@ -142,6 +148,19 @@ in config). Shown here with the `E` alias set up by the repo's
 | `E.list()`                 | Names of all running ensembles.                    |
 | `E.start_link(opts)`       | Start an ad-hoc ensemble imperatively (same shape  |
 |                            | as a config entry).                                |
+
+### Helpers (iex-flavoured sugar)
+
+| Function                   | Purpose                                            |
+|----------------------------|----------------------------------------------------|
+| `E.ask!(name, prompt)`     | Like `ask/2` but returns the response text string. |
+| `E.text(resp)`             | Extract `.text` from `%Response{}` or `{:ok, r}`.  |
+| `E.puts(resp)`             | Print response text (markdown-friendly).           |
+| `E.await(name, token)`     | Block on a `tell` token, return the `%Response{}`. |
+| `E.drain(name)`            | `inbox` unwrapped to `[{token, text}, ...]`.       |
+
+For library code (not iex), call `GenAgentEnsemble` directly -- the
+`IEx` module is a humans-at-the-prompt convenience.
 
 ## Ad-hoc ensembles from iex
 
