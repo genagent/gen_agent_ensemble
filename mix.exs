@@ -34,7 +34,7 @@ defmodule GenAgentEnsemble.MixProject do
       gen_agent_dep(),
       {:telemetry, "~> 1.0"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
-    ]
+    ] ++ backend_deps()
   end
 
   # Use the sibling path when cloned alongside `gen_agent/` (local
@@ -44,6 +44,23 @@ defmodule GenAgentEnsemble.MixProject do
       {:gen_agent, path: "../gen_agent", override: true}
     else
       {:gen_agent, "~> 0.2.0"}
+    end
+  end
+
+  # Backends are optional in production (this library has no hard
+  # dependency on any of them), but we pull them in for dev/test so
+  # the config/config.exs example ensembles work out of the box in
+  # `iex -S mix`. Path dep when the sibling exists, hex otherwise.
+  defp backend_deps do
+    for pkg <- ~w(gen_agent_anthropic gen_agent_claude gen_agent_openai gen_agent_codex) do
+      sibling = Path.expand("../#{pkg}/mix.exs", __DIR__)
+      app = String.to_atom(pkg)
+
+      if File.exists?(sibling) do
+        {app, path: "../#{pkg}", only: [:dev, :test]}
+      else
+        {app, "~> 0.1", only: [:dev, :test]}
+      end
     end
   end
 
