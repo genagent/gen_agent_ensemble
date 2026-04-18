@@ -26,9 +26,9 @@ This library is both:
 | Debate        | Two agents alternate until convergence   | `GenAgentEnsemble.Strategies.Debate`        |
 | Consensus     | N peer agents vote with structured verdict | `GenAgentEnsemble.Strategies.Consensus`  |
 
-See the [gen_agent pattern guides](https://hexdocs.pm/gen_agent)
-for the shape of each strategy and how to reason about their
-behaviour.
+See the [strategy workflow guides](guides/workflows/overview.md)
+for the shape of each strategy, canonical iex workflows, and
+per-strategy gotchas.
 
 ## Install
 
@@ -37,7 +37,7 @@ def deps do
   [
     {:gen_agent_ensemble, "~> 0.1"},
     # Plus at least one backend:
-    {:gen_agent_anthropic, "~> 0.1"},
+    {:gen_agent_anthropic, "~> 0.2"},
     # and/or:
     {:gen_agent_claude, "~> 0.1"},
     {:gen_agent_openai, "~> 0.1"},
@@ -48,30 +48,11 @@ end
 
 ## Quickstart (zero-setup demo)
 
-The `GenAgentEnsemble.Backends.Echo` backend requires no API keys
-and no external services -- every prompt is echoed back with an
-"echo: " prefix. Useful for sanity-checking the wiring on a fresh
-clone.
-
-Edit `config/config.exs`:
-
-```elixir
-import Config
-
-config :gen_agent_ensemble,
-  ensembles: [
-    [
-      name: "echo",
-      strategy: GenAgentEnsemble.Strategies.Solo,
-      opts: [
-        agent:
-          {"w", GenAgentEnsemble.Agents.Simple,
-           backend: GenAgentEnsemble.Backends.Echo,
-           delay_ms: 300}
-      ]
-    ]
-  ]
-```
+A fresh clone ships with one ensemble pre-enabled: `"echo"`. It
+uses `GenAgentEnsemble.Backends.Echo` -- no API keys, no external
+services, every prompt echoed back with an `"echo: "` prefix.
+Every other ensemble in `config/config.exs` is commented out as
+a template you can enable after wiring up real credentials.
 
 Start iex. The repo ships a `.iex.exs` that aliases
 `GenAgentEnsemble.IEx` to `E` -- a module that delegates the core
@@ -89,7 +70,10 @@ iex> E.ask!("echo", "hello there")
 "echo: hello there"
 ```
 
-Once that feels right, swap the backend for something real.
+Once that feels right, uncomment one of the commented templates
+in `config/config.exs` (Solo, Pool, Switchboard, Pipeline,
+Supervisor, Debate, or Consensus), set the appropriate env var
+(`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), and restart iex.
 
 ## Real backend example
 
@@ -130,8 +114,9 @@ See the [Pool workflow guide](guides/workflows/pool.md) for the
 config shape and the fan-out-vs-serial gotcha.
 
 See the [strategy workflow guides](guides/workflows/overview.md)
-for the canonical command sequences for Solo, Pool, Pipeline, and
-Supervisor, including per-strategy gotchas and variations.
+for the canonical command sequences for every strategy (Solo,
+Switchboard, Pool, Pipeline, Supervisor, Debate, Consensus),
+including per-strategy gotchas and variations.
 
 ## Public API
 
@@ -228,9 +213,20 @@ mix test
 `gen_agent` when the sibling directory exists, falling back to hex
 otherwise. This means a bare clone also just works.
 
+Full pre-commit checklist (matches CI):
+
+```sh
+mix format --check-formatted
+mix compile --warnings-as-errors
+mix credo --strict
+mix dialyzer
+mix test
+```
+
 ## Status
 
-Pre-1.0. The op vocabulary
+Pre-1.0. The strategy op vocabulary
 (`:start | :stop | :dispatch | :reply | :reply_error | :forward | :halt`)
-and public API are stabilizing; breaking changes will bump the
-minor version. See `CHANGELOG.md` once it exists.
+and public API are stable and unlikely to change further before 1.0.
+Breaking changes bump the minor version; see `CHANGELOG.md` for
+what's changed.
