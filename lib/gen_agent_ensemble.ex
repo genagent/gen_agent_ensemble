@@ -25,15 +25,62 @@ defmodule GenAgentEnsemble do
   See `GenAgentEnsemble.Strategy` for how to implement your own strategy.
   """
 
+  @doc """
+  Start a new ensemble process. Takes `:name`, `:strategy`, and
+  `:opts` (the strategy's own options keyword list).
+  """
   defdelegate start_link(opts), to: GenAgentEnsemble.Server
+
+  @doc """
+  Fire-and-forget prompt. Returns `{:ok, token}` immediately; use
+  `poll/2` or `inbox/1` to retrieve the response later.
+  """
   defdelegate tell(name, prompt), to: GenAgentEnsemble.Server
+
+  @doc """
+  Like `tell/2` but with strategy-specific options (e.g.
+  `agent: "alice"` for Switchboard).
+  """
   defdelegate tell(name, prompt, opts), to: GenAgentEnsemble.Server
+
+  @doc """
+  Synchronous prompt. Blocks until the strategy replies or the
+  default timeout expires.
+  """
   defdelegate ask(name, prompt), to: GenAgentEnsemble.Server
+
+  @doc """
+  Like `ask/2` with options. Supports `timeout:` plus any
+  strategy-specific keys (e.g. `agent:` for Switchboard).
+  """
   defdelegate ask(name, prompt, opts), to: GenAgentEnsemble.Server
+
+  @doc """
+  Non-blocking check on a `tell`-minted token. Returns
+  `{:ok, :pending}`, `{:ok, :completed, response}`, or
+  `{:error, reason}`.
+  """
   defdelegate poll(name, token), to: GenAgentEnsemble.Server
+
+  @doc """
+  Drain every completed `tell` token since the last call. Returns
+  `{:ok, [{token, {:ok, response} | {:error, reason}}, ...]}`.
+  """
   defdelegate inbox(name), to: GenAgentEnsemble.Server
+
+  @doc """
+  Send an asynchronous event to the strategy (`handle_notify/2`).
+  """
   defdelegate notify(name, event), to: GenAgentEnsemble.Server
+
+  @doc """
+  Inspect the ensemble: running agents, strategy phase, queue depth.
+  """
   defdelegate status(name), to: GenAgentEnsemble.Server
+
+  @doc """
+  Stop the ensemble. Sub-agents are terminated in the process.
+  """
   defdelegate stop(name), to: GenAgentEnsemble.Server
 
   @doc """

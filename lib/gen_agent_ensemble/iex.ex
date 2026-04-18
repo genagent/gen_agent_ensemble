@@ -37,16 +37,37 @@ defmodule GenAgentEnsemble.IEx do
 
   # --- delegated core API ---
 
+  @doc "See `GenAgentEnsemble.list/0`."
   defdelegate list(), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.start_link/1`."
   defdelegate start_link(opts), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.tell/2`."
   defdelegate tell(name, prompt), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.tell/3`."
   defdelegate tell(name, prompt, opts), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.ask/2`."
   defdelegate ask(name, prompt), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.ask/3`."
   defdelegate ask(name, prompt, opts), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.poll/2`."
   defdelegate poll(name, token), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.inbox/1`."
   defdelegate inbox(name), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.notify/2`."
   defdelegate notify(name, event), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.status/1`."
   defdelegate status(name), to: GenAgentEnsemble
+
+  @doc "See `GenAgentEnsemble.stop/1`."
   defdelegate stop(name), to: GenAgentEnsemble
 
   # --- helpers ---

@@ -6,8 +6,8 @@ defmodule GenAgentEnsemble.Backends.Echo do
   Each prompt turn emits a single `:result` event whose text is
   derived from the prompt. No external dependencies, no API keys,
   no subprocess -- makes it possible to wire up an ensemble and
-  use `GenAgentEnsemble.chat/1` end-to-end from a fresh `iex -S mix`
-  session with zero setup.
+  exercise `GenAgentEnsemble.ask/2` or `tell/2` end-to-end from a
+  fresh `iex -S mix` session with zero setup.
 
   Not for production use. For real work, reach for
   `GenAgent.Backends.Anthropic`, `GenAgent.Backends.Claude`,
@@ -19,8 +19,8 @@ defmodule GenAgentEnsemble.Backends.Echo do
       maps the prompt text to the response text. Defaults to
       prepending `"echo: "`.
     * `:delay_ms` -- milliseconds to sleep before emitting the
-      response. Useful for eyeballing the `⋯ thinking` indicator in
-      `chat/1`. Default: `0`.
+      response. Useful for simulating a slow backend during iex
+      prototyping. Default: `0`.
 
   ## Example
 
@@ -35,7 +35,7 @@ defmodule GenAgentEnsemble.Backends.Echo do
                     delay_ms: 500}
           ]
         )
-      GenAgentEnsemble.chat("echo")
+      {:ok, %{text: "HELLO"}} = GenAgentEnsemble.ask("echo", "hello")
   """
 
   @behaviour GenAgent.Backend
