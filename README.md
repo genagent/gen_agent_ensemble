@@ -1,5 +1,9 @@
 # gen_agent_ensemble
 
+[![CI](https://github.com/genagent/gen_agent_ensemble/actions/workflows/ci.yml/badge.svg)](https://github.com/genagent/gen_agent_ensemble/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/gen_agent_ensemble.svg)](https://hex.pm/packages/gen_agent_ensemble)
+[![Docs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/gen_agent_ensemble)
+
 Multi-agent orchestration strategies for
 [GenAgent](https://hex.pm/packages/gen_agent). Where `GenAgent`
 gives you one process per LLM session, `gen_agent_ensemble` gives
