@@ -20,6 +20,7 @@ the same operations are available, minus the REPL-flavoured helpers
 | "Run this input through a chain of transformations."            | Pipeline    | `E.ask!/2`                    |
 | "Decompose a big question, fan out, recombine."                 | Supervisor  | `E.ask!/2`                    |
 | "Two perspectives interrogate each other until they converge."  | Debate      | `E.ask!/2`                    |
+| "N agents vote on a decision and return a categorical verdict." | Consensus   | `E.ask!/2`                    |
 
 Rough guide, not a rulebook -- a Solo can handle multi-turn
 conversation just fine, a Pool can be used for a single prompt if
@@ -69,3 +70,4 @@ iex> E.list()
 - [Pipeline](pipeline.md) -- linear N-stage chain
 - [Supervisor](supervisor.md) -- coordinator decomposes, workers fan out
 - [Debate](debate.md) -- two agents alternate until convergence or round cap
+- [Consensus](consensus.md) -- N peer agents vote with a structured verdict until they converge

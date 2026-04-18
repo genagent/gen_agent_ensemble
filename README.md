@@ -24,8 +24,7 @@ This library is both:
 | Pipeline      | Linear stage chain                       | `GenAgentEnsemble.Strategies.Pipeline`      |
 | Supervisor    | Coordinator + dynamic worker fan-out     | `GenAgentEnsemble.Strategies.Supervisor`    |
 | Debate        | Two agents alternate until convergence   | `GenAgentEnsemble.Strategies.Debate`        |
-
-Planned: Consensus.
+| Consensus     | N peer agents vote with structured verdict | `GenAgentEnsemble.Strategies.Consensus`  |
 
 See the [gen_agent pattern guides](https://hexdocs.pm/gen_agent)
 for the shape of each strategy and how to reason about their

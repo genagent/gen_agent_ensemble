@@ -102,7 +102,8 @@ defmodule GenAgentEnsemble.MixProject do
         "guides/workflows/pool.md",
         "guides/workflows/pipeline.md",
         "guides/workflows/supervisor.md",
-        "guides/workflows/debate.md"
+        "guides/workflows/debate.md",
+        "guides/workflows/consensus.md"
       ],
       groups_for_extras: [
         "Strategy workflows": ~r"guides/workflows/.*"
