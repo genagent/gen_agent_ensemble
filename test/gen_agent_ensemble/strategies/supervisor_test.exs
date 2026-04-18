@@ -13,11 +13,9 @@ defmodule GenAgentEnsemble.Strategies.SupervisorTest do
   end
 
   defp safe_stop(name) do
-    try do
-      GenAgentEnsemble.stop(name)
-    catch
-      :exit, _ -> :ok
-    end
+    GenAgentEnsemble.stop(name)
+  catch
+    :exit, _ -> :ok
   end
 
   defp decomposer_newlines, do: fn text -> String.split(text, "\n", trim: true) end

@@ -79,11 +79,9 @@ defmodule GenAgentEnsemble.Backends.EchoTest do
     end
 
     defp safe_stop(name) do
-      try do
-        GenAgentEnsemble.stop(name)
-      catch
-        :exit, _ -> :ok
-      end
+      GenAgentEnsemble.stop(name)
+    catch
+      :exit, _ -> :ok
     end
   end
 end

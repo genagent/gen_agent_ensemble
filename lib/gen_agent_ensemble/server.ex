@@ -64,16 +64,17 @@ defmodule GenAgentEnsemble.Server do
         }
 
         attach_telemetry(session_name)
-
-        state =
-          Enum.reduce(start_specs, state, fn spec, acc ->
-            case apply_op({:start, spec}, acc) do
-              {:ok, acc2} -> acc2
-              {:error, _} -> acc
-            end
-          end)
-
+        state = apply_start_specs(state, start_specs)
         {:ok, state}
+    end
+  end
+
+  defp apply_start_specs(state, specs), do: Enum.reduce(specs, state, &apply_start_spec/2)
+
+  defp apply_start_spec(spec, state) do
+    case apply_op({:start, spec}, state) do
+      {:ok, new_state} -> new_state
+      {:error, _} -> state
     end
   end
 
@@ -319,13 +320,8 @@ defmodule GenAgentEnsemble.Server do
   end
 
   defp apply_op({:dispatch, name, prompt}, state) do
-    case GenAgent.tell(namespaced(state, name), prompt) do
-      {:ok, ref} ->
-        {:ok, %{state | in_flight: Map.put(state.in_flight, ref, name)}}
-
-      other ->
-        {:error, other}
-    end
+    {:ok, ref} = GenAgent.tell(namespaced(state, name), prompt)
+    {:ok, %{state | in_flight: Map.put(state.in_flight, ref, name)}}
   end
 
   defp apply_op({:reply, token, response}, state) do
@@ -392,11 +388,9 @@ defmodule GenAgentEnsemble.Server do
   end
 
   defp catch_exit(fun) do
-    try do
-      fun.()
-    catch
-      :exit, _ -> :ok
-    end
+    fun.()
+  catch
+    :exit, _ -> :ok
   end
 
   # --- telemetry bridge ---

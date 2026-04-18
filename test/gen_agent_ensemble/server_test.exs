@@ -7,11 +7,9 @@ defmodule GenAgentEnsemble.ServerTest do
   alias GenAgentEnsemble.TestAgent
 
   defp safe_stop(name) do
-    try do
-      GenAgentEnsemble.stop(name)
-    catch
-      :exit, _ -> :ok
-    end
+    GenAgentEnsemble.stop(name)
+  catch
+    :exit, _ -> :ok
   end
 
   defp start_solo(session_name, bare_agent_name, scripts) do

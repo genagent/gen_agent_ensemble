@@ -211,8 +211,6 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
   end
 
   defp default_synthesizer(worker_outputs) do
-    worker_outputs
-    |> Enum.map(fn {_worker, text} -> text end)
-    |> Enum.join("\n\n")
+    Enum.map_join(worker_outputs, "\n\n", fn {_worker, text} -> text end)
   end
 end
