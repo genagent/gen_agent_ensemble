@@ -13,11 +13,9 @@ defmodule GenAgentEnsemble.Strategies.PoolTest do
   end
 
   defp safe_stop(name) do
-    try do
-      GenAgentEnsemble.stop(name)
-    catch
-      :exit, _ -> :ok
-    end
+    GenAgentEnsemble.stop(name)
+  catch
+    :exit, _ -> :ok
   end
 
   defp start_pool(name, count, worker_scripts) do

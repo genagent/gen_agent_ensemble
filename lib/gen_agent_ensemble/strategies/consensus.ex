@@ -234,18 +234,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
   end
 
   defp compose_reprompt(original, others) do
-    others_block =
-      others
-      |> Enum.map(fn {agent, {verdict, rationale, _raw}} ->
-        label =
-          case verdict do
-            nil -> "#{agent} (abstained)"
-            v -> "#{agent} (#{format_verdict(v)})"
-          end
-
-        "#{label}:\n#{rationale}"
-      end)
-      |> Enum.join("\n\n")
+    others_block = Enum.map_join(others, "\n\n", &format_other_response/1)
 
     """
     The other panelists responded as follows to the original question:
@@ -260,6 +249,16 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
   end
 
   defp format_verdict(atom), do: atom |> Atom.to_string() |> String.upcase()
+
+  defp format_other_response({agent, {verdict, rationale, _raw}}) do
+    label =
+      case verdict do
+        nil -> "#{agent} (abstained)"
+        v -> "#{agent} (#{format_verdict(v)})"
+      end
+
+    "#{label}:\n#{rationale}"
+  end
 
   defp finalize(token, status, verdict, rounds_used, pending, state) do
     responses = collect_responses(state.agents, pending)
@@ -301,10 +300,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
       "CONSENSUS: #{inspect(verdict)} (#{agreeing} of #{length(responses)} agreed via " <>
         "#{format_threshold(threshold)}, round #{rounds_used})"
 
-    body =
-      responses
-      |> Enum.map(&render_response_entry/1)
-      |> Enum.join("\n\n")
+    body = Enum.map_join(responses, "\n\n", &render_response_entry/1)
 
     header <> "\n\n" <> body
   end
@@ -314,10 +310,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
       "DIVERGED AFTER #{rounds_used} ROUND#{if rounds_used == 1, do: "", else: "S"} " <>
         "(#{format_threshold(threshold)} not reached)"
 
-    body =
-      responses
-      |> Enum.map(&render_response_entry/1)
-      |> Enum.join("\n\n")
+    body = Enum.map_join(responses, "\n\n", &render_response_entry/1)
 
     header <> "\n\n" <> body
   end

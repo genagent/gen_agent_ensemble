@@ -13,11 +13,9 @@ defmodule GenAgentEnsemble.Strategies.ConsensusTest do
   end
 
   defp safe_stop(name) do
-    try do
-      GenAgentEnsemble.stop(name)
-    catch
-      :exit, _ -> :ok
-    end
+    GenAgentEnsemble.stop(name)
+  catch
+    :exit, _ -> :ok
   end
 
   # Simple verdict parser: looks for "VERDICT: X" in text.

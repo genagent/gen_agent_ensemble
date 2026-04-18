@@ -15,7 +15,8 @@ defmodule GenAgentEnsemble.MixProject do
       description: description(),
       package: package(),
       docs: docs(),
-      source_url: @source_url
+      source_url: @source_url,
+      dialyzer: [plt_file: {:no_warn, "_build/dev/dialyxir_#{System.otp_release()}.plt"}]
     ]
   end
 
@@ -33,7 +34,9 @@ defmodule GenAgentEnsemble.MixProject do
     [
       gen_agent_dep(),
       {:telemetry, "~> 1.0"},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ] ++ backend_deps()
   end
 

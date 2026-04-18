@@ -159,9 +159,7 @@ defmodule GenAgentEnsemble.Strategies.Debate do
   end
 
   defp render_reply(:transcript, transcript) do
-    transcript
-    |> Enum.map(fn {agent, text} -> "#{agent}:\n#{text}" end)
-    |> Enum.join("\n\n")
+    Enum.map_join(transcript, "\n\n", fn {agent, text} -> "#{agent}:\n#{text}" end)
   end
 
   defp render_reply(:last, transcript) do
