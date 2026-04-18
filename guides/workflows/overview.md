@@ -19,6 +19,7 @@ the same operations are available, minus the REPL-flavoured helpers
 | "Answer N independent things, in parallel."                     | Pool        | `tell` + `drain`              |
 | "Run this input through a chain of transformations."            | Pipeline    | `E.ask!/2`                    |
 | "Decompose a big question, fan out, recombine."                 | Supervisor  | `E.ask!/2`                    |
+| "Two perspectives interrogate each other until they converge."  | Debate      | `E.ask!/2`                    |
 
 Rough guide, not a rulebook -- a Solo can handle multi-turn
 conversation just fine, a Pool can be used for a single prompt if
@@ -67,3 +68,4 @@ iex> E.list()
 - [Pool](pool.md) -- fixed-size worker pool, FIFO queue
 - [Pipeline](pipeline.md) -- linear N-stage chain
 - [Supervisor](supervisor.md) -- coordinator decomposes, workers fan out
+- [Debate](debate.md) -- two agents alternate until convergence or round cap

@@ -23,8 +23,9 @@ This library is both:
 | Pool          | N reusable workers, FIFO queue           | `GenAgentEnsemble.Strategies.Pool`          |
 | Pipeline      | Linear stage chain                       | `GenAgentEnsemble.Strategies.Pipeline`      |
 | Supervisor    | Coordinator + dynamic worker fan-out     | `GenAgentEnsemble.Strategies.Supervisor`    |
+| Debate        | Two agents alternate until convergence   | `GenAgentEnsemble.Strategies.Debate`        |
 
-Planned: Debate, Consensus.
+Planned: Consensus.
 
 See the [gen_agent pattern guides](https://hexdocs.pm/gen_agent)
 for the shape of each strategy and how to reason about their

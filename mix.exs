@@ -91,7 +91,8 @@ defmodule GenAgentEnsemble.MixProject do
         "guides/workflows/switchboard.md",
         "guides/workflows/pool.md",
         "guides/workflows/pipeline.md",
-        "guides/workflows/supervisor.md"
+        "guides/workflows/supervisor.md",
+        "guides/workflows/debate.md"
       ],
       groups_for_extras: [
         "Strategy workflows": ~r"guides/workflows/.*"
