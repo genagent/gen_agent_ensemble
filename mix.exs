@@ -51,15 +51,25 @@ defmodule GenAgentEnsemble.MixProject do
   # dependency on any of them), but we pull them in for dev/test so
   # the config/config.exs example ensembles work out of the box in
   # `iex -S mix`. Path dep when the sibling exists, hex otherwise.
+  #
+  # gen_agent_anthropic >= 0.2 required for :receive_timeout option
+  # used by the xmodel-debate example ensemble.
   defp backend_deps do
-    for pkg <- ~w(gen_agent_anthropic gen_agent_claude gen_agent_openai gen_agent_codex) do
+    backends = [
+      {"gen_agent_anthropic", "~> 0.2"},
+      {"gen_agent_claude", "~> 0.1"},
+      {"gen_agent_openai", "~> 0.1"},
+      {"gen_agent_codex", "~> 0.1"}
+    ]
+
+    for {pkg, hex_constraint} <- backends do
       sibling = Path.expand("../#{pkg}/mix.exs", __DIR__)
       app = String.to_atom(pkg)
 
       if File.exists?(sibling) do
         {app, path: "../#{pkg}", only: [:dev, :test]}
       else
-        {app, "~> 0.1", only: [:dev, :test]}
+        {app, hex_constraint, only: [:dev, :test]}
       end
     end
   end
