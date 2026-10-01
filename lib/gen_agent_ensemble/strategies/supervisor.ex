@@ -29,6 +29,10 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
   Only one in-flight prompt at a time in this first version. If a
   second `tell`/`ask` arrives while a fan-out is in progress, it is
   queued and dispatched after the current one completes.
+
+  If a worker process dies during fan-out, the current run and every
+  queued request fail with `{:worker_down, worker, reason}`. Remaining
+  workers are stopped, and a later fresh request may start a new run.
   """
 
   @behaviour GenAgentEnsemble.Strategy
@@ -186,10 +190,41 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
 
   @impl true
   def handle_agent_down(agent, reason, state) do
-    if agent == state.coordinator do
-      {:ok, [{:halt, {:coordinator_down, reason}}], state}
+    cond do
+      agent == state.coordinator ->
+        {:ok, [{:halt, {:coordinator_down, reason}}], state}
+
+      match?({:fanning_out, _, _}, state.phase) ->
+        fail_fan_out_on_worker_down(agent, reason, state)
+
+      true ->
+        {:ok, [], state}
+    end
+  end
+
+  defp fail_fan_out_on_worker_down(agent, reason, state) do
+    {:fanning_out, token, progress} = state.phase
+
+    if Map.has_key?(progress, agent) do
+      failure = {:worker_down, agent, reason}
+      stop_ops = for {worker, _} <- progress, worker != agent, do: {:stop, worker}
+      fail_ops = [{:reply_error, token, failure} | queued_fail_ops(state.queue, failure)]
+      state = %{state | phase: :idle, queue: Queue.new()}
+      {:ok, stop_ops ++ fail_ops, state}
     else
       {:ok, [], state}
+    end
+  end
+
+  defp queued_fail_ops(queue, reason), do: queued_fail_ops(queue, reason, [])
+
+  defp queued_fail_ops(queue, reason, acc) do
+    case Queue.pop(queue) do
+      {:ok, {token, _prompt}, rest} ->
+        queued_fail_ops(rest, reason, [{:reply_error, token, reason} | acc])
+
+      :empty ->
+        Enum.reverse(acc)
     end
   end
 

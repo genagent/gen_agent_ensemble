@@ -152,14 +152,18 @@ iex> E.await("research", tok) |> E.puts()
   stops them after synthesis. This means no per-worker conversation
   history accumulation across runs -- the trade-off is the
   start/stop cost per sub-prompt.
+- **A worker death fails pending work.** If a worker process dies during
+  fan-out, the active request and every queued request complete with
+  `{:worker_down, worker_name, reason}`. Other workers are stopped;
+  submit a fresh request to retry after inspecting the error.
 - **Coordinator is persistent.** The coordinator agent's session
   lives across runs, so its input tokens grow as you reuse the
   ensemble. Restart if you want a clean coordinator.
 - **Decomposer/synthesizer errors fail the session.** If your
   user-supplied function raises, the ensemble halts. Wrap
   defensively if the coordinator output might be malformed.
-- **Decomposer output ordering matters for the synthesizer.** The
-  synthesizer receives `[{worker_name, output_text}]` in the order
-  workers finished, not in the order they were dispatched. If you
-  need stable ordering, include a stable key in the worker prompts
-  and sort inside the synthesizer.
+- **Worker names determine synthesizer order.** The synthesizer
+  receives `[{worker_name, output_text}]` sorted by worker name,
+  regardless of completion order. If your fan-out can exceed nine
+  workers, account for lexical ordering (`worker-10` precedes
+  `worker-2`) in a custom synthesizer.
