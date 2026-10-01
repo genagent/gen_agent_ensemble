@@ -75,7 +75,7 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
 
   defp start_or_queue(prompt, token, %{phase: :idle} = state) do
     state = %{state | phase: {:decomposing, token}}
-    {:ok, [{:dispatch, state.coordinator, prompt}], state}
+    {:ok, [{:dispatch, state.coordinator, prompt, token}], state}
   end
 
   defp start_or_queue(prompt, token, state) do
@@ -105,7 +105,7 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
       |> Enum.map_reduce(%{}, fn {prompt, i}, prog_acc ->
         worker = "#{state.worker_prefix}-#{i}"
         spec = {worker, state.worker_module, state.worker_opts}
-        ops = [{:start, spec}, {:dispatch, worker, prompt}]
+        ops = [{:start, spec}, {:dispatch, worker, prompt, token}]
         {ops, Map.put(prog_acc, worker, :pending)}
       end)
 
@@ -152,7 +152,7 @@ defmodule GenAgentEnsemble.Strategies.Supervisor do
     case Queue.pop(state.queue) do
       {:ok, {token, prompt}, rest} ->
         state = %{state | phase: {:decomposing, token}, queue: rest}
-        {ops_so_far ++ [{:dispatch, state.coordinator, prompt}], state}
+        {ops_so_far ++ [{:dispatch, state.coordinator, prompt, token}], state}
 
       :empty ->
         {ops_so_far, state}

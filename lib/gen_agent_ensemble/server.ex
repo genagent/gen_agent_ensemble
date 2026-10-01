@@ -16,7 +16,7 @@ defmodule GenAgentEnsemble.Server do
     :pending,
     # completed tell results, %{token => {:ok, response} | {:error, reason}}
     :completed,
-    # refs we've dispatched, %{gen_agent_ref => agent_name}
+    # refs we've dispatched, %{gen_agent_ref => {agent_name, run_token}}
     :in_flight
   ]
 
@@ -169,24 +169,9 @@ defmodule GenAgentEnsemble.Server do
       {nil, _} ->
         {:noreply, state}
 
-      {bare_agent, rest} ->
+      {{bare_agent, token}, rest} ->
         state = %{state | in_flight: rest}
-
-        case GenAgent.poll(ns_agent, ref, 5_000) do
-          {:ok, :completed, response} ->
-            {ops, strategy_state} =
-              call_strategy(state.strategy_mod, :handle_response, [
-                bare_agent,
-                response,
-                state.strategy_state
-              ])
-
-            state = %{state | strategy_state: strategy_state} |> apply_ops(ops)
-            {:noreply, state}
-
-          _ ->
-            {:noreply, state}
-        end
+        {:noreply, handle_prompt_stop(state, ns_agent, ref, bare_agent, token)}
     end
   end
 
@@ -195,28 +180,9 @@ defmodule GenAgentEnsemble.Server do
       {nil, _} ->
         {:noreply, state}
 
-      {bare_agent, rest} ->
+      {{bare_agent, token}, rest} ->
         state = %{state | in_flight: rest}
-
-        state =
-          if function_exported?(state.strategy_mod, :handle_error, 3) do
-            {ops, strategy_state} =
-              call_strategy(state.strategy_mod, :handle_error, [
-                bare_agent,
-                reason,
-                state.strategy_state
-              ])
-
-            %{state | strategy_state: strategy_state} |> apply_ops(ops)
-          else
-            Logger.warning(
-              "[gen_agent_ensemble] agent #{bare_agent} turn errored (unhandled): #{inspect(reason)}"
-            )
-
-            state
-          end
-
-        {:noreply, state}
+        {:noreply, handle_prompt_error(state, bare_agent, token, reason)}
     end
   end
 
@@ -226,7 +192,12 @@ defmodule GenAgentEnsemble.Server do
         {:noreply, state}
 
       {agent, monitors} ->
-        state = %{state | monitors: monitors, agents: MapSet.delete(state.agents, agent)}
+        state = %{
+          state
+          | monitors: monitors,
+            agents: MapSet.delete(state.agents, agent),
+            in_flight: drop_in_flight_for(state.in_flight, agent)
+        }
 
         state =
           if function_exported?(state.strategy_mod, :handle_agent_down, 3) do
@@ -262,6 +233,51 @@ defmodule GenAgentEnsemble.Server do
   end
 
   def handle_info(_msg, state), do: {:noreply, state}
+
+  defp handle_prompt_stop(state, ns_agent, ref, bare_agent, token) do
+    if active_dispatch?(state, token) do
+      case GenAgent.poll(ns_agent, ref, 5_000) do
+        {:ok, :completed, response} ->
+          {ops, strategy_state} =
+            call_strategy(state.strategy_mod, :handle_response, [
+              bare_agent,
+              response,
+              state.strategy_state
+            ])
+
+          %{state | strategy_state: strategy_state} |> apply_ops(ops)
+
+        _ ->
+          state
+      end
+    else
+      state
+    end
+  end
+
+  defp handle_prompt_error(state, bare_agent, token, reason) do
+    cond do
+      not active_dispatch?(state, token) ->
+        state
+
+      function_exported?(state.strategy_mod, :handle_error, 3) ->
+        {ops, strategy_state} =
+          call_strategy(state.strategy_mod, :handle_error, [
+            bare_agent,
+            reason,
+            state.strategy_state
+          ])
+
+        %{state | strategy_state: strategy_state} |> apply_ops(ops)
+
+      true ->
+        Logger.warning(
+          "[gen_agent_ensemble] agent #{bare_agent} turn errored (unhandled): #{inspect(reason)}"
+        )
+
+        state
+    end
+  end
 
   @impl true
   def terminate(_reason, state) do
@@ -316,13 +332,26 @@ defmodule GenAgentEnsemble.Server do
   defp apply_op({:stop, name}, state) do
     _ = catch_exit(fn -> GenAgent.stop(namespaced(state, name)) end)
     monitors = drop_monitors_for(state.monitors, name)
-    {:ok, %{state | agents: MapSet.delete(state.agents, name), monitors: monitors}}
+
+    {:ok,
+     %{
+       state
+       | agents: MapSet.delete(state.agents, name),
+         monitors: monitors,
+         in_flight: drop_in_flight_for(state.in_flight, name)
+     }}
   end
 
-  defp apply_op({:dispatch, name, prompt}, state) do
-    {:ok, ref} = GenAgent.tell(namespaced(state, name), prompt)
-    {:ok, %{state | in_flight: Map.put(state.in_flight, ref, name)}}
+  defp apply_op({:dispatch, name, prompt, token}, state) do
+    if Map.has_key?(state.pending, token) do
+      dispatch(state, name, prompt, token)
+    else
+      {:error, {:unknown_token, token}}
+    end
   end
+
+  # Existing external strategies may still use the unscoped operation.
+  defp apply_op({:dispatch, name, prompt}, state), do: dispatch(state, name, prompt, nil)
 
   defp apply_op({:reply, token, response}, state) do
     reply_to_token(state, token, {:ok, response})
@@ -340,6 +369,11 @@ defmodule GenAgentEnsemble.Server do
   defp apply_op({:halt, reason}, state) do
     send(self(), {:halt_session, reason})
     {:ok, state}
+  end
+
+  defp dispatch(state, name, prompt, token) do
+    {:ok, ref} = GenAgent.tell(namespaced(state, name), prompt)
+    {:ok, %{state | in_flight: Map.put(state.in_flight, ref, {name, token})}}
   end
 
   defp reply_to_token(state, token, result) do
@@ -363,6 +397,10 @@ defmodule GenAgentEnsemble.Server do
     end
   end
 
+  defp drop_in_flight_for(in_flight, agent_name) do
+    Map.reject(in_flight, fn {_ref, {name, _token}} -> name == agent_name end)
+  end
+
   # --- helpers ---
 
   defp call_strategy(mod, fun, args) do
@@ -382,6 +420,9 @@ defmodule GenAgentEnsemble.Server do
     {result, rest} = Map.pop(state.completed, token)
     {result, %{state | completed: rest}}
   end
+
+  defp active_dispatch?(_state, nil), do: true
+  defp active_dispatch?(state, token), do: Map.has_key?(state.pending, token)
 
   defp mint_token do
     "tok-" <> Integer.to_string(System.unique_integer([:positive, :monotonic]))

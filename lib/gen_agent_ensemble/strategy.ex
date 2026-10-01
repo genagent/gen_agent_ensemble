@@ -20,9 +20,11 @@ defmodule GenAgentEnsemble.Strategy do
       `{name, module, opts}` where `module` is a `GenAgent` callback
       module.
     * `{:stop, agent_name}` -- terminate a sub-agent.
-    * `{:dispatch, agent_name, prompt}` -- send a prompt to an existing
-      sub-agent via `GenAgent.tell/3`. When the turn completes, the
-      framework calls `handle_response/3` on the strategy.
+    * `{:dispatch, agent_name, prompt, token}` -- send a prompt to an existing
+      sub-agent via `GenAgent.tell/3`. The framework calls `handle_response/3`
+      only while `token` remains pending, so late results from an aborted run
+      cannot enter a later run. The three-element form remains available for
+      existing external strategies but has no run fencing.
     * `{:reply, token, response}` -- complete a pending `tell`/`ask`.
       The caller polling on `token` (or blocked on an `ask`) receives
       the response.
@@ -39,9 +41,9 @@ defmodule GenAgentEnsemble.Strategy do
 
   Tokens are opaque strings minted by the framework when the caller
   invokes `tell`/`ask`. Strategies receive the token and must correlate
-  it with work they dispatch; responses land back in `handle_response`
-  tagged with the *agent* that produced them, not the token, so the
-  strategy's own state is the source of truth.
+  it with work they dispatch. Pass the token in every `:dispatch` op;
+  responses land back in `handle_response` tagged with the *agent* that
+  produced them after the framework checks that token is still pending.
   """
 
   @type agent_name :: String.t()
@@ -54,6 +56,7 @@ defmodule GenAgentEnsemble.Strategy do
   @type op ::
           {:start, start_spec}
           | {:stop, agent_name}
+          | {:dispatch, agent_name, prompt, token}
           | {:dispatch, agent_name, prompt}
           | {:reply, token, response}
           | {:reply_error, token, term()}

@@ -67,7 +67,7 @@ defmodule GenAgentEnsemble.Strategies.Pool do
 
   defp dispatch_or_queue(prompt, token, %{free: [worker | rest]} = state) do
     state = %{state | free: rest, busy: Map.put(state.busy, worker, token)}
-    {:ok, [{:dispatch, worker, prompt}], state}
+    {:ok, [{:dispatch, worker, prompt, token}], state}
   end
 
   defp dispatch_or_queue(prompt, token, %{free: []} = state) do
@@ -146,7 +146,7 @@ defmodule GenAgentEnsemble.Strategies.Pool do
     case Queue.pop(state.queue) do
       {:ok, {token, prompt}, rest} ->
         state = %{state | queue: rest, busy: Map.put(state.busy, worker, token)}
-        {ops_so_far ++ [{:dispatch, worker, prompt}], state}
+        {ops_so_far ++ [{:dispatch, worker, prompt, token}], state}
 
       :empty ->
         state = %{state | free: [worker | state.free]}

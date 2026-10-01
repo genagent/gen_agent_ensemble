@@ -110,7 +110,7 @@ defmodule GenAgentEnsemble.Strategies.Debate do
 
   defp start_or_queue(prompt, token, %{phase: :idle} = state) do
     phase = {:running, token, state.first, 0, []}
-    {:ok, [{:dispatch, state.first, prompt}], %{state | phase: phase}}
+    {:ok, [{:dispatch, state.first, prompt, token}], %{state | phase: phase}}
   end
 
   defp start_or_queue(prompt, token, state) do
@@ -138,7 +138,7 @@ defmodule GenAgentEnsemble.Strategies.Debate do
     else
       other = other_agent(agent, state)
 
-      {:ok, [{:dispatch, other, response.text}],
+      {:ok, [{:dispatch, other, response.text, token}],
        %{state | phase: {:running, token, other, turns, transcript}}}
     end
   end
@@ -175,7 +175,7 @@ defmodule GenAgentEnsemble.Strategies.Debate do
     case Queue.pop(state.queue) do
       {:ok, {token, prompt}, rest} ->
         state = %{state | phase: {:running, token, state.first, 0, []}, queue: rest}
-        {ops_so_far ++ [{:dispatch, state.first, prompt}], state}
+        {ops_so_far ++ [{:dispatch, state.first, prompt, token}], state}
 
       :empty ->
         {ops_so_far, state}

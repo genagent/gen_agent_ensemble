@@ -78,7 +78,7 @@ defmodule GenAgentEnsemble.Strategies.Switchboard do
         if MapSet.member?(state.agents, name) do
           queue = Map.fetch!(state.pending, name)
           state = put_in(state.pending[name], :queue.in(token, queue))
-          {:ok, [{:dispatch, name, prompt}], state}
+          {:ok, [{:dispatch, name, prompt, token}], state}
         else
           {:ok, [{:reply_error, token, {:unknown_agent, name}}], state}
         end

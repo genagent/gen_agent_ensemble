@@ -51,7 +51,7 @@ defmodule GenAgentEnsemble.Strategies.Pipeline do
 
   defp dispatch_or_queue(prompt, token, %{phase: :idle} = state) do
     first = hd(state.stages)
-    {:ok, [{:dispatch, first, prompt}], %{state | phase: {:in_stage, 0, token}}}
+    {:ok, [{:dispatch, first, prompt, token}], %{state | phase: {:in_stage, 0, token}}}
   end
 
   defp dispatch_or_queue(prompt, token, state) do
@@ -81,7 +81,7 @@ defmodule GenAgentEnsemble.Strategies.Pipeline do
     if next_idx < length(state.stages) do
       next_stage = Enum.at(state.stages, next_idx)
 
-      {:ok, [{:dispatch, next_stage, response.text}],
+      {:ok, [{:dispatch, next_stage, response.text, token}],
        %{state | phase: {:in_stage, next_idx, token}}}
     else
       state = %{state | phase: :idle}
@@ -128,7 +128,7 @@ defmodule GenAgentEnsemble.Strategies.Pipeline do
         first = hd(state.stages)
 
         state = %{state | phase: {:in_stage, 0, token}, queue: rest}
-        {ops_so_far ++ [{:dispatch, first, prompt}], state}
+        {ops_so_far ++ [{:dispatch, first, prompt, token}], state}
 
       :empty ->
         {ops_so_far, state}
