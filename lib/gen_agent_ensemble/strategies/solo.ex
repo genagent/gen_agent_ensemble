@@ -32,13 +32,13 @@ defmodule GenAgentEnsemble.Strategies.Solo do
   @impl true
   def handle_tell(prompt, _opts, token, state) do
     state = %{state | tokens: :queue.in(token, state.tokens)}
-    {:ok, [{:dispatch, state.agent, prompt}], state}
+    {:ok, [{:dispatch, state.agent, prompt, token}], state}
   end
 
   @impl true
   def handle_ask(prompt, _opts, token, state) do
     state = %{state | tokens: :queue.in(token, state.tokens)}
-    {:ok, [{:dispatch, state.agent, prompt}], state}
+    {:ok, [{:dispatch, state.agent, prompt, token}], state}
   end
 
   @impl true

@@ -135,8 +135,8 @@ defmodule GenAgentEnsemble.IExTest do
       # Let both tells complete and land in the inbox.
       Process.sleep(100)
 
-      drained = E.drain(name) |> Enum.sort()
-      assert [{^ta, "x"}, {^tb, "y"}] = drained
+      drained = E.drain(name)
+      assert Map.new(drained) == %{ta => "x", tb => "y"}
     end
 
     test "surfaces token failures as {token, {:error, reason}}", %{name: name} do

@@ -137,7 +137,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
   def handle_ask(prompt, _opts, token, state), do: start_or_queue(prompt, token, state)
 
   defp start_or_queue(prompt, token, %{phase: :idle} = state) do
-    ops = for agent <- state.agents, do: {:dispatch, agent, prompt}
+    ops = for agent <- state.agents, do: {:dispatch, agent, prompt, token}
     {:ok, ops, %{state | phase: {:running, token, prompt, 1, %{}}}}
   end
 
@@ -182,7 +182,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
         finalize(token, :diverged, nil, round, pending, state)
 
       :not_converged ->
-        reprompt_ops = build_reprompt_ops(state.agents, original, pending)
+        reprompt_ops = build_reprompt_ops(state.agents, original, pending, token)
         new_phase = {:running, token, original, round + 1, %{}}
         {:ok, reprompt_ops, %{state | phase: new_phase}}
     end
@@ -221,7 +221,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
     end
   end
 
-  defp build_reprompt_ops(agents, original, pending) do
+  defp build_reprompt_ops(agents, original, pending, token) do
     for agent <- agents do
       others =
         pending
@@ -229,7 +229,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
         |> Enum.sort_by(fn {a, _} -> Enum.find_index(agents, &(&1 == a)) end)
 
       prompt = compose_reprompt(original, others)
-      {:dispatch, agent, prompt}
+      {:dispatch, agent, prompt, token}
     end
   end
 
@@ -332,7 +332,7 @@ defmodule GenAgentEnsemble.Strategies.Consensus do
   defp maybe_start_next(%{phase: :idle} = state, ops_so_far) do
     case Queue.pop(state.queue) do
       {:ok, {token, prompt}, rest} ->
-        dispatch_ops = for agent <- state.agents, do: {:dispatch, agent, prompt}
+        dispatch_ops = for agent <- state.agents, do: {:dispatch, agent, prompt, token}
         state = %{state | phase: {:running, token, prompt, 1, %{}}, queue: rest}
         {ops_so_far ++ dispatch_ops, state}
 
